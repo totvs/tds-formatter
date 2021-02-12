@@ -1,0 +1,25 @@
+{
+  "projectName": "tds-vscode",
+  "projectOwner": "totvs",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 50,
+  "commit": false,
+  "commitConvention": "gitmoji",
+  "contributors": [
+    {
+      "login": "brodao",
+      "name": "Alan Cândido",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/949914?v=4",
+      "profile": "https://github.com/brodao",
+      "contributions": [
+        "code",
+        "doc"
+      ]
+    }
+  ],
+  "contributorsPerLine": 6
+}
