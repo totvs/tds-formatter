@@ -1,2 +1,3 @@
 {
+  "tds.batch.formatter": "Formatação em lote (via Prettier)"
 }

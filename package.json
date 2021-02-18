@@ -1,139 +1,125 @@
 {
-	"name": "tds-formatter",
-	"displayName": "TDS Formatter",
-	"description": "Formata fontes AdvPL, 4GL e suas variantes, via Prettier, com mais opções e controle que a formatação padrão.",
-	"version": "0.0.0",
-	"publisher": "TOTVS",
-	"author": {
-		"name": "TOTVS",
-		"email": "tecnologia@totvs.com.br"
-	},
-	"license": "Apache 2.0",
-	"preview": true,
-	"badges": [],
-	"keywords": [
-		"advpl",
-		"tlpp",
-		"4gl",
-		"tds",
-		"totvs",
-		"protheus"
-	],
-	"engines": {
-		"vscode": "^1.47.0"
-	},
-	"icon": "imagens/tds-formatter.png",
-	"categories": [
-		"Formatters"
-	],
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/totvs/tds-formatter.git"
-	},
-	"bugs": {
-		"url": "https://github.com/totvs/tds-formatter.git"
-	},
-	"scripts": {
-		"clean2": "gulp clean",
-		"compile": "tsc --version && npm-run-all compile:*",
-		"compile:extension": "tsc -p ./src",
-		"compile:views": "webpack --mode development",
-		"tslint": "tslint ./src/**/*.ts",
-		"tslint:fix": "tslint ./src/**/*.ts --fix",
-		"test": "node node_modules/vscode/bin/test",
-		"export-i18n": "gulp export-i18n",
-		"i18n-import": "gulp i18n-import",
-		"---RELEASE---": "",
-		"release": "npx standard-version",
-		"tag": "git push --follow-tags",
-		"package": "gulp package",
-		"publish": "gulp publish",
-		"vscode:prepublish": "webpack --mode production",
-		"---MISC---": "",
-		"all-contributors:generate": "all-contributors generate",
-		"all-contributors:check": "all-contributors check"
-	},
-	"extensionDependencies": [
-		"totvs.tds-vscode",
-		"esbenp.prettier-vscode"
-	],
-	"dependencies": {
-		"@material-ui/core": "^4.11.0",
-		"@material-ui/icons": "^4.9.1",
-		"@material-ui/lab": "^4.0.0-alpha.56",
-		"@types/node": "^14.14.12",
-		"@types/react": "^16.9.50",
-		"@types/vscode": "^1.52.0",
-		"core-js": "^3.6.4",
-		"prettier": "^2.2.1",
-		"prettier-plugin-4gl": "^0.0.8",
-		"react": "^16.13.0",
-		"react-dom": "^16.13.0",
-		"typescript": "^4.1.0",
-		"vscode-nls": "^5.0.0"
-	},
-	"devDependencies": {
-		"@babel/cli": "^7.11.6",
-		"@babel/core": "^7.11.6",
-		"@types/ini": "^1.3.30",
-		"@types/react-dom": "^16.9.8",
-		"all-contributors-cli": "^6.17.4",
-		"del": "^6.0.0",
-		"gulp": "^4.0.2",
-		"gulp-filter": "^6.0.0",
-		"gulp-sourcemaps": "^2.6.5",
-		"gulp-tslint": "^8.1.4",
-		"gulp-typescript": "^6.0.0-alpha.1",
-		"gulp-util": "^3.0.8",
-		"npm-run-all": "^4.1.5",
-		"terser-webpack-plugin": "^4.2.2",
-		"ts-loader": "^8.0.4",
-		"tslint": "^6.1.2",
-		"vsce": "^1.81.0",
-		"vscode-nls-dev": "^3.3.2",
-		"vscode-test": "^1.4.1",
-		"webpack": "^4.44.2",
-		"webpack-cli": "^3.3.12",
-		"webpack-stream": "^6.1.0"
-	},
-	"main": "./out/extension",
-	"activationEvents": [
-		"*"
-	],
-	"contributes": {
-		"commands": [
-			{
-				"command": "tds.formatter.4gl",
-				"title": "%tds.formatter.4gl%",
-				"category": "TOTVS",
-				"icon": {
-					"light": "imagens/tds-formatter.png",
-					"dark": "imagens/tds-formatter.png"
-				}
-			},
-			{
-				"command": "tds.formatter.advpl",
-				"title": "tds.formatter.advpl",
-				"category": "TOTVS",
-				"icon": {
-					"light": "path/to/light/icon.svg",
-					"dark": "path/to/dark/icon.svg"
-				}
-			}
-		],
-		"menus": {
-			"editor/title": [
-				{
-					"when": "resourceLangId == 4gl",
-					"command": "tds.formatter.4gl",
-					"group": "formatter"
-				},
-				{
-					"when": "resourceLangId == advpl",
-					"command": "tds.formatter.advpl",
-					"group": "formatter"
-				}
-			]
-		}
-	}
+  "name": "tds-formatter",
+  "displayName": "TOTVS Developer Studio Extend Formatter",
+  "description": "Formata fontes AdvPL, 4GL e suas variantes, via Prettier, com mais opções e controle que a formatação padrão.",
+  "version": "0.0.0",
+  "publisher": "TOTVS",
+  "author": {
+    "name": "TOTVS",
+    "email": "tecnologia@totvs.com.br"
+  },
+  "license": "Apache 2.0",
+  "preview": true,
+  "badges": [],
+  "keywords": [
+    "advpl",
+    "tlpp",
+    "4gl",
+    "tds",
+    "totvs",
+    "protheus"
+  ],
+  "engines": {
+    "vscode": "^1.47.0"
+  },
+  "icon": "imagens/tds-formatter.png",
+  "categories": [
+    "Formatters"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/totvs/tds-formatter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/totvs/tds-formatter.git"
+  },
+  "scripts": {
+    "clean2": "gulp clean",
+    "compile": "tsc --version && npm-run-all compile:*",
+    "compile:extension": "tsc -p ./src",
+    "compile:views": "webpack --mode development",
+    "tslint": "tslint ./src/**/*.ts",
+    "tslint:fix": "tslint ./src/**/*.ts --fix",
+    "test": "node node_modules/vscode/bin/test",
+    "export-i18n": "gulp export-i18n",
+    "i18n-import": "gulp i18n-import",
+    "---RELEASE---": "",
+    "release": "npx standard-version",
+    "tag": "git push --follow-tags",
+    "package": "gulp package",
+    "publish": "gulp publish",
+    "vscode:prepublish": "webpack --mode production",
+    "---MISC---": "",
+    "all-contributors:generate": "all-contributors generate",
+    "all-contributors:check": "all-contributors check"
+  },
+  "extensionDependencies": [
+    "totvs.tds-vscode",
+    "esbenp.prettier-vscode"
+  ],
+  "dependencies": {
+    "@material-ui/core": "^4.11.3",
+    "@material-ui/icons": "^4.9.1",
+    "@material-ui/lab": "^4.0.0-alpha.56",
+    "@types/node": "^14.14.28",
+    "@types/react": "^16.14.4",
+    "@types/vscode": "^1.53.0",
+    "core-js": "^3.8.3",
+    "prettier": "^2.2.1",
+    "prettier-plugin-4gl": "0.0.9",
+    "react": "^16.13.0",
+    "react-dom": "^16.13.0",
+    "typescript": "^4.1.5",
+    "vscode-nls": "^5.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.12.16",
+    "@babel/core": "^7.12.16",
+    "@types/ini": "^1.3.30",
+    "@types/react-dom": "^16.9.11",
+    "all-contributors-cli": "^6.20.0",
+    "del": "^6.0.0",
+    "gulp": "^4.0.2",
+    "gulp-filter": "^6.0.0",
+    "gulp-sourcemaps": "^2.6.5",
+    "gulp-tslint": "^8.1.4",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "gulp-util": "^3.0.8",
+    "npm-run-all": "^4.1.5",
+    "terser-webpack-plugin": "^4.2.2",
+    "ts-loader": "^8.0.17",
+    "tslint": "^6.1.2",
+    "vsce": "^1.85.0",
+    "vscode-nls-dev": "^3.3.2",
+    "vscode-test": "^1.5.1",
+    "webpack": "^4.46.0",
+    "webpack-cli": "^3.3.12",
+    "webpack-stream": "^6.1.2"
+  },
+  "main": "./out/extension",
+  "activationEvents": [
+    "*"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "tds.batch.formatter",
+        "title": "%tds.batch.formatter%",
+        "category": "TOTVS",
+        "icon": {
+          "light": "imagens/tds-formatter.png",
+          "dark": "imagens/tds-formatter.png"
+        }
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "when": "resourceLangId == 4gl || resourceLangId == advpl",
+          "command": "tds.batch.formatter",
+          "group": "formatter"
+        }
+      ]
+    }
+  }
 }

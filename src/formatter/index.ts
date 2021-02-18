@@ -1,7 +1,5 @@
 import * as fs from "fs";
 import * as path from "path";
-import { DocumentFormatting, resourceFormatting } from "./documentFormatting";
-import { AdvplFormattingRules } from "./advplFormattingRules";
 
 export const documentFormatting = (resources: string[]) => {
 	const resourceList: string[] = getResourceList(resources);
@@ -33,5 +31,5 @@ function getResourceList(resources: string[]): string[] {
 import { register as R4gl } from "./fourglFormatting";
 import { register as RAdvpl } from "./advplFormatting";
 
-export const register4glFormatting = () => R4gl({ language: "4gl" });
-export const registerAdvplFormatting = () => RAdvpl({ language: "advpl" });
+export const register4glFormatting = () => R4gl();
+export const registerAdvplFormatting = () => RAdvpl();

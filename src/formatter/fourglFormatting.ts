@@ -1,53 +1,35 @@
 import * as vscode from "vscode";
+import * as prettier from "prettier";
 import { DocumentFormatting } from "./documentFormatting";
-import { FourglFormattingRules } from "./FourglFormattingRules";
 
-class FourglFormatting extends DocumentFormatting
-  implements
-  vscode.DocumentRangeFormattingEditProvider,
-  vscode.OnTypeFormattingEditProvider,
-  vscode.DocumentFormattingEditProvider {
-  provideDocumentRangeFormattingEdits(
-    document: vscode.TextDocument,
-    range: vscode.Range,
-    options: vscode.FormattingOptions,
-    token: vscode.CancellationToken
-  ): vscode.ProviderResult<vscode.TextEdit[]> {
-    return [];
-  }
+class FourglFormatting
+  extends DocumentFormatting {
 
-  public provideOnTypeFormattingEdits(
+  protected doFormat(
     document: vscode.TextDocument,
-    position: vscode.Position,
-    ch: string,
-    options: vscode.FormattingOptions,
-    token: vscode.CancellationToken
-  ): Promise<vscode.TextEdit[]> {
-    return Promise.resolve([]);
-  }
-
-  provideDocumentFormattingEdits(
-    document: vscode.TextDocument,
-    options: vscode.FormattingOptions,
-    token: vscode.CancellationToken
-  ): vscode.ProviderResult<vscode.TextEdit[]> {
-    return super.provideDocumentFormattingEdits(document, options, token);
+    options: prettier.Options
+  ): string {
+    return super.doFormat(document, {
+      ...options
+    });
   }
 }
 
-export function register(selector: vscode.DocumentSelector) {
-  const provider = new FourglFormatting(new FourglFormattingRules());
+export function register(): vscode.Disposable {
+  const selector: vscode.DocumentSelector = { language: "4gl" };
+  const provider = new FourglFormatting(selector);
 
   return vscode.Disposable.from(
     vscode.languages.registerOnTypeFormattingEditProvider(
-      selector,
+      provider.selector,
       provider,
-      "\n"
+      " ",
+      "\t"
     ),
     vscode.languages.registerDocumentRangeFormattingEditProvider(
-      selector,
+      provider.selector,
       provider
     ),
-    vscode.languages.registerDocumentFormattingEditProvider(selector, provider)
+    vscode.languages.registerDocumentFormattingEditProvider(provider.selector, provider)
   );
 }

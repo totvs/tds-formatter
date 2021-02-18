@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import * as prettier from "prettier";
+
 import {
   DocumentFormattingEditProvider,
   TextDocument,
@@ -8,200 +10,214 @@ import {
   TextEdit,
 } from "vscode";
 import { getFormattingOptions } from "./formattingOptions";
-import { RulesFormatting, RuleMatch } from "./formattingRules";
 
 export class DocumentFormatting implements DocumentFormattingEditProvider {
-  private rulesFormatting: RulesFormatting;
+  private _selector: vscode.DocumentSelector;
 
-  private lineContinue: boolean = false;
-  private ignore_at: string | null = null;
-
-  constructor(RulesFormatting: RulesFormatting) {
-    this.rulesFormatting = RulesFormatting;
+  constructor(selector: vscode.DocumentSelector) {
+    this._selector = selector;
   }
 
-  protected applyFormattingEdits(
-    document: TextDocument,
-    options: FormattingOptions,
-    token: CancellationToken
-  ): TextEdit[] {
+  get selector(): vscode.DocumentSelector {
+    return this._selector;
+  }
 
-    let rules: RulesFormatting = this.rulesFormatting;
-    const tab: string = options.insertSpaces
-      ? " ".repeat(options.tabSize)
-      : "\t";
-    let identBlock: string = "";
-    let cont: number = 0;
+  provideDocumentRangeFormattingEdits(
+    document: vscode.TextDocument,
+    range: vscode.Range,
+    options: vscode.FormattingOptions,
+    token: vscode.CancellationToken
+  ): vscode.ProviderResult<vscode.TextEdit[]> {
+    const result: vscode.TextEdit[] = [];
 
-    let result: TextEdit[] = [];
-    const lc = document.lineCount;
-    this.ignore_at = null;
+    options = {
+      ...options,
+      rangeStart: document.offsetAt(range.start),
+      rangeEnd: document.offsetAt(range.end),
+    };
 
-    for (let nl = 0; nl < lc; nl++) {
-      const line = document.lineAt(nl);
+    const formatted = this.doFormat(document, options);
 
-      if (!line.isEmptyOrWhitespace && rules.match(line.text)) {
-        let ruleMatch: RuleMatch | null = rules.getLastMatch();
-
-        if (ruleMatch) {
-          const rule = ruleMatch.rule;
-
-          if (rule.id === this.ignore_at) {
-            this.ignore_at = null;
-          } else if (this.ignore_at) {
-            continue;
-          }
-
-          if (rule.ignore_at) {
-            this.ignore_at = rule.ignore_at;
-          }
-
-          if (!rule.increment && !rule.decrement && !rule.reset) {
-            continue;
-          }
-
-          if (rule.reset) {
-            cont = 0;
-            identBlock = "";
-          }
-
-          if (rule.decrement) {
-            cont = cont < 1 ? 0 : cont - 1;
-            identBlock = tab.repeat(cont);
-          }
-
-          const newLine: string = line.text
-            .replace(/(\s*)?/, identBlock + (this.lineContinue ? tab : ""))
-            .trimRight();
-          result.push(TextEdit.replace(line.range, newLine));
-          this.lineContinue = newLine.endsWith(";");
-
-          if (rule.increment) {
-            cont++;
-            identBlock = tab.repeat(cont);
-          }
-
-          if (rule.subrules) {
-            rules = rule.subrules;
-            if (rules.getRules().length === 0) {
-              rules = this.rulesFormatting;
-            }
-          }
-        }
-      } else {
-        if (!this.ignore_at) {
-          let newLine: string = "";
-          if (!line.isEmptyOrWhitespace) {
-            newLine = line.text
-              .replace(/(\s*)?/, identBlock + (this.lineContinue ? tab : ""))
-              .trimRight();
-          }
-
-          const regExpResult = newLine.match(/^(\s+)(return)/i);
-          if (regExpResult) {
-            const ws = regExpResult[1];
-            if (ws === tab) {
-              newLine = newLine.trim();
-            }
-          }
-          result.push(TextEdit.replace(line.range, newLine));
-          this.lineContinue = newLine.endsWith(";");
-        }
-      }
+    if (formatted.length > 0) {
+      result.push(
+        vscode.TextEdit.replace(
+          range,
+          formatted.substring(0, formatted.length - 1)
+        )
+      );
     }
 
     return result;
   }
 
+  public provideOnTypeFormattingEdits(
+    document: vscode.TextDocument,
+    position: vscode.Position,
+    ch: string,
+    options: vscode.FormattingOptions,
+    token: vscode.CancellationToken
+  ): Promise<vscode.TextEdit[]> {
+    const result: vscode.TextEdit[] = [];
+    const line: vscode.TextLine = document.lineAt(position.line);
+
+    if (line.text.trim() !== "") {
+      options = {
+        ...options,
+        rangeStart: document.offsetAt(line.range.start),
+        rangeEnd: document.offsetAt(line.range.end),
+        //        scope: ch === "\n" ? "line" : "word",
+      };
+
+      const formatted = this.doFormat(document, options);
+
+      if (formatted.length > 0 && formatted !== line.text) {
+        result.push(
+          vscode.TextEdit.replace(
+            line.range,
+            formatted.substring(0, formatted.length - 1)
+          )
+        );
+      }
+    }
+
+    return Promise.resolve(result);
+  }
+
   provideDocumentFormattingEdits(
-    document: TextDocument,
-    options: FormattingOptions,
-    token: CancellationToken
-  ): ProviderResult<TextEdit[]> {
-    const result = this.applyFormattingEdits(document, options, token);
+    document: vscode.TextDocument,
+    options: vscode.FormattingOptions,
+    token: vscode.CancellationToken
+  ): vscode.ProviderResult<vscode.TextEdit[]> {
+    const result = [];
+    const formatted = this.doFormat(document, options);
+
+    if (formatted.length > 0) {
+      const start = document.validatePosition(new vscode.Position(0, 0));
+      const end = document.validatePosition(
+        new vscode.Position(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY)
+      );
+
+      result.push(
+        vscode.TextEdit.replace(new vscode.Range(start, end), formatted)
+      );
+    }
 
     return result;
   }
-}
 
-export async function resourceFormatting(
-  resources: string[],
-  documentFormatting: DocumentFormatting
-) {
-  const targetResources: string[] = resources;
+  private process(content: string, options: any): any {
+    try {
+      let result: any = prettier.format(content, options);
+      result = result.formatted || result;
 
-  if (targetResources.length === 0) {
-    vscode.window.showInformationMessage("Nenhum recurso localizado.");
-  } else {
-    vscode.window.showInformationMessage("Formatação em lote iniciada.");
+      return result ? result.substring(0, result.length - 1) : "";
+    } catch (error) {
+      console.log(error);
+      return content;
+    }
+  }
 
-    let lc = await vscode.window.withProgress(
-      {
-        location: vscode.ProgressLocation.Notification,
-        title: "Formatting",
-        cancellable: true,
-      },
-      (progress, token) => {
-        let lineCount = 0;
+  protected doFormat(
+    document: vscode.TextDocument,
+    options: prettier.Options
+  ): string {
+    let result: string = document.getText();
+    options = {
+      ...getFormattingOptions(document.languageId),
+      ...options,
+      filepath: document.uri.toString()
+    };
 
-        token.onCancellationRequested(() => {
-          vscode.window.showWarningMessage("Resource formatting canceled.");
-        });
-        const total = targetResources.length;
-        const increment: number = 100 / total;
+    if (options.rangeStart) {
+      result = result.substring(options.rangeStart, options.rangeEnd);
+      options = {
+        requirePragma: false,
+        insertPragma: false,
+        rangeEnd: options.rangeEnd + 1,
+      };
+    }
 
-        targetResources.forEach((resource: string, index) => {
-          const uri: vscode.Uri = vscode.Uri.file(resource);
+    result = this.process(result, options);
 
-          vscode.workspace
-            .openTextDocument(uri)
-            .then(async (document: TextDocument) => {
-              if (document.languageId !== "") {
-                lineCount += document.lineCount;
-
-                const options: FormattingOptions = getFormattingOptions(
-                  document.languageId
-                );
-                const providerResult: ProviderResult<
-                  TextEdit[]
-                > = documentFormatting.provideDocumentFormattingEdits(
-                  document,
-                  options,
-                  token
-                );
-                if (Array.isArray(providerResult)) {
-                  progress.report({
-                    increment: increment * index,
-                    message: `${uri.toString(false)} (${index + 1}/${total})`,
-                  });
-
-                  const wsEdit: vscode.WorkspaceEdit = new vscode.WorkspaceEdit();
-                  wsEdit.set(uri, providerResult);
-                  await vscode.workspace.applyEdit(wsEdit).then(
-                    (value: boolean) => { },
-                    (reason) => {
-                      vscode.window.showErrorMessage(
-                        `Formatting error: ${reason}`
-                      );
-                      console.log(reason);
-                    }
-                  );
-                }
-              }
-            });
-        });
-
-        const p = new Promise((resolve) => {
-          setTimeout(() => {
-            resolve(lineCount);
-          }, 5000);
-        });
-
-        return p;
-      }
-    );
-    vscode.window.showInformationMessage(
-      `Formatting finished. ${lc} lines have been processed in ${targetResources.length} files.`
-    );
+    return result as string;
   }
 }
+
+// export async function resourceFormatting(
+//   resources: string[],
+//   documentFormatting: DocumentFormatting
+// ) {
+//   const targetResources: string[] = resources;
+
+//   if (targetResources.length === 0) {
+//     vscode.window.showInformationMessage("Nenhum recurso localizado.");
+//   } else {
+//     vscode.window.showInformationMessage("Formatação em lote iniciada.");
+
+//     let lc = await vscode.window.withProgress(
+//       {
+//         location: vscode.ProgressLocation.Notification,
+//         title: "Formatting",
+//         cancellable: true,
+//       },
+//       (progress, token) => {
+//         let lineCount = 0;
+
+//         token.onCancellationRequested(() => {
+//           vscode.window.showWarningMessage("Resource formatting canceled.");
+//         });
+//         const total = targetResources.length;
+//         const increment: number = 100 / total;
+
+//         targetResources.forEach((resource: string, index) => {
+//           const uri: vscode.Uri = vscode.Uri.file(resource);
+
+//           vscode.workspace
+//             .openTextDocument(uri)
+//             .then(async (document: TextDocument) => {
+//               if (document.languageId !== "") {
+//                 lineCount += document.lineCount;
+
+//                 const providerResult: ProviderResult<
+//                   TextEdit[]
+//                 > = documentFormatting.provideDocumentFormattingEdits(
+//                   document,
+//                   {},
+//                   token
+//                 );
+//                 if (Array.isArray(providerResult)) {
+//                   progress.report({
+//                     increment: increment * index,
+//                     message: `${uri.toString(false)} (${index + 1}/${total})`,
+//                   });
+
+//                   const wsEdit: vscode.WorkspaceEdit = new vscode.WorkspaceEdit();
+//                   wsEdit.set(uri, providerResult);
+//                   await vscode.workspace.applyEdit(wsEdit).then(
+//                     (value: boolean) => {},
+//                     (reason) => {
+//                       vscode.window.showErrorMessage(
+//                         `Formatting error: ${reason}`
+//                       );
+//                       console.log(reason);
+//                     }
+//                   );
+//                 }
+//               }
+//             });
+//         });
+
+//         const p = new Promise((resolve) => {
+//           setTimeout(() => {
+//             resolve(lineCount);
+//           }, 5000);
+//         });
+
+//         return p;
+//       }
+//     );
+//     vscode.window.showInformationMessage(
+//       `Formatting finished. ${lc} lines have been processed in ${targetResources.length} files.`
+//     );
+//  }
+// }
